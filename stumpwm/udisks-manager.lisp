@@ -174,8 +174,11 @@ green. Unmounted ones in red. When selected, displays an action menu for the dev
   (let ((thread (find *udisks-thread-name* (bordeaux-threads:all-threads) 
                 :key #'bordeaux-threads:thread-name)))
   (when thread
-    (stumpwm:message "Udisks manager already running: Restarting...")
+    (stumpwm:message "UDisks manager already running: Restarting...")
     (bordeaux-threads:destroy-thread thread))
-  (bordeaux-threads:make-thread (lambda () (handler-case (main-loop)
-                                             (error () (stumpwm:message "Closing Udisks manager"))))
+  (bordeaux-threads:make-thread (lambda () (handler-case 
+                                               (main-loop)
+                                             (error (condition) 
+                                               (progn (stumpwm:message "Closing UDisks manager. See .xsession-errors for details." condition)
+                                                      (format *error-output* "~a" condition)))))
                                 :name *udisks-thread-name*)))
