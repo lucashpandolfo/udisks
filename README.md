@@ -27,6 +27,10 @@ plugins directory and add the following code to your .stumpwmrc file
   "Launch (or relaunch) udisk manager"
   (stumpwm-udisks:udisks-manager-launch))
 
+;;optional: use another file manager
+(setf stumpwm-udisks:*dir-open-command* "sakura -e mc ~s")
+(setf stumpwm-udisks:*dir-open-command* "thunar ~s");etc
+
 ;; Launch at init
 (launch-udisks-manager)
 ```
