@@ -36,7 +36,11 @@ Screenshots
 -----------
 
 ![New device](screenshots/new.png)
+
 ![Devices menu](screenshots/menu.png)
+
 ![Actions menu](screenshots/actions.png)
+
 ![Actions menu2](screenshots/actions2.png)
+
 ![Unmount device](screenshots/unmounted.png)
