@@ -12,13 +12,14 @@
   (:use #:cl)
   (:export 
    #:show-devices-menu
-   #:udisks-manager-launch))
+   #:udisks-manager-launch
+   #:*dir-open-command*))
 
 (in-package #:stumpwm-udisks)
 
 (defparameter *new-device-actions* nil)
 
-(defparameter *dir-open-command*   "sakura -x \"mc ~s\"")
+(defparameter *dir-open-command* "xterm -e mc ~s")
 
 (defparameter *unmounted-actions-menu* `(("^B^[^2*Mount^]" mount-device)
                                          ("^B^[^6*Mount and open^]" mount-and-open)))
