@@ -166,10 +166,10 @@ green. Unmounted ones in red. When selected, displays an action menu for the dev
 
 ;;Manager helpers
 
-(defvar *udisks-thread-name* "Stumpwm Udisks main loop")
+(defvar *udisks-thread-name* "Stumpwm UDisks main loop")
 
 (defun udisks-manager-launch ()
-  "Starts a new thread for monitoring changes in upower."
+  "Starts a new thread for monitoring changes in udisks."
   (let ((thread (find *udisks-thread-name* (bordeaux-threads:all-threads) 
                 :key #'bordeaux-threads:thread-name)))
   (when thread
