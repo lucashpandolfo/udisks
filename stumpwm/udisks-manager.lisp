@@ -17,6 +17,7 @@
 (in-package #:stumpwm-udisks)
 
 (defparameter *new-device-actions* nil)
+
 (defparameter *dir-open-command*   "sakura -x \"mc ~s\"")
 
 (defparameter *unmounted-actions-menu* `(("^B^[^2*Mount^]" mount-device)
@@ -32,11 +33,17 @@
        (error () nil))))
 
 (defun notify-new-device (bus device-path)
+  "Show a message with the name of the new device detected. 
+
+TODO: execute custom actions at detection time."
+
   (let ((name (udisks:block-id-label bus device-path)))
     (stumpwm:message "New device detected: ^[^5*~a^]" name)
     (execute-new-device-actions bus device-path)))
 
+
 (defun mountablep (bus device-path)
+  "Check if a block device is mountable"
   (eq (udisks:block-id-usage bus device-path) :filesystem))
 
 (defun notify-disconnected-device (device-path)
@@ -61,7 +68,9 @@
                                  path
                                  label) :mounted t   :object dev))))))))
 
+
 (defun show-actions-menu (device-info)
+  "Displays an action menu for a device."
   (let ((prompt (getf device-info :name)))
     (let ((menu (if (getf device-info :mounted)
                     *mounted-actions-menu*
@@ -71,10 +80,14 @@
                       (stumpwm:current-screen) 
                       menu prompt)))
         (when action
-          (funcall (cadr action)
-                    device-info))))))
+          (handler-case  (funcall (cadr action)
+                                  device-info)
+            (error (object) (format nil "~a" object))))))))
+          
 
 (defun show-devices-menu ()
+  "Shows a menu with the available devices. Mounted ones in
+green. Unmounted ones in red. When selected, displays an action menu for the device."
   (let ((devices-info (sort (get-devices-info) 
                             #'string-lessp 
                             :key (lambda (item) (getf item :name)))))
@@ -94,7 +107,9 @@
             (show-actions-menu
              (cadr device))))))))
 
+
 (defun main-loop ()
+  "Wait for hardware changes and do something with them"
   (let (message)
     (dbus:with-open-bus (bus (dbus:system-server-addresses))
       (dbus:add-match bus :path "/org/freedesktop/UDisks2" :interface "org.freedesktop.DBus.ObjectManager" :member "InterfacesRemoved")
@@ -122,12 +137,12 @@
                    ((string-equal event "InterfacesAdded")   (new-device maybe-device))
                    (t nil)))))))))
 
-
 ;;Actions
 (defun mount-device (dev-info)
   (format nil "Mounted at ^B^[^3*~s^]"
-          (dbus:with-open-bus (bus (dbus:system-server-addresses))
-            (udisks:mount bus (getf dev-info :object)))))
+          (handler-case (dbus:with-open-bus (bus (dbus:system-server-addresses))
+                          (udisks:mount bus (getf dev-info :object)))
+            (error () (error "^B^[^1*Error^] mounting ^B^[^3*~s^]" (getf dev-info :name))))))
 
 (defun open-device (dev-info)
   (let ((path 
@@ -140,10 +155,13 @@
     (open-device dev-info)))
 
 (defun unmount-device (dev-info)
-  (stumpwm:message "Unmounting ^B[^1*~s^]" (getf dev-info :name))
-  (dbus:with-open-bus (bus (dbus:system-server-addresses))
-    (udisks:unmount bus (getf dev-info :object)))
-  (format nil "Unmounted ^B^[^5*~s^]" (getf dev-info :name)))
+  (stumpwm:message "Unmounting ^B^[^1*~s^]" (getf dev-info :name))
+
+  (handler-case (progn 
+                  (dbus:with-open-bus (bus (dbus:system-server-addresses))
+                    (udisks:unmount bus (getf dev-info :object)))
+                  (format nil "Unmounted ^B^[^5*~s^]" (getf dev-info :name)))
+    (error () (error "^B^[^1*Error^] Unmounting ^B^[^3*~s^]" (getf dev-info :name)))))
 
 
 ;;Manager helpers
